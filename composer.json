@@ -1,0 +1,5 @@
+{
+    "require": {
+        "php-mod/curl": "^1.4"
+    }
+}
