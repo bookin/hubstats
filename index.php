@@ -7,6 +7,13 @@ use Cache\Adapter\Filesystem\FilesystemCachePool;
 use GitStat\GitHub;
 
 if($_SERVER['REQUEST_URI'] == '/logout'){
+
+    $filesystemAdapter = new Local(__DIR__.'/');
+    $filesystem        = new Filesystem($filesystemAdapter);
+    $pool = new FilesystemCachePool($filesystem);
+    $pool->deleteItem($_COOKIE['access_token']);
+
+    unset($_COOKIE['access_token']);
     setcookie("access_token", "", time()-3600);
     header('Location: /');
 }
