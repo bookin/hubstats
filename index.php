@@ -94,7 +94,7 @@ function showChart($id, $views){
         return;
     }
 
-    $start = new DateTime(date('c', $views[0]['timestamp']/1000));
+    $start = new DateTime(date('c', ($views[0]['timestamp']/1000)-(60*60*24)));
     $end = new DateTime(date('c',($views[count($views)-1]['timestamp']/1000)+(60*60*24)));
     $data = ArrayDateRange($start, $end, 'U', ['count'=>0,'uniques'=>0]);
     foreach($data as $t=>&$d){
@@ -116,7 +116,13 @@ function showChart($id, $views){
             'labels'=>['Visits', 'Uniques'],
             'xLabels'=>'day',
             'behaveLikeLine'=>true,
-            'dateFormat'=>"js:function(x){ var date = new Date(x); return ('0' + (date.getMonth() + 1)).slice(-2) + '/' +  ('0' + date.getDate()).slice(-2) + '/' + date.getFullYear().toString().replace(new RegExp('^.{2}'), '');}"
+            'dateFormat'=>"js:function(x){ var date = new Date(x); return ('0' + (date.getMonth() + 1)).slice(-2) + '/' +  ('0' + date.getDate()).slice(-2) + '/' + date.getFullYear().toString().replace(new RegExp('^.{2}'), '');}",
+            'lineColors'=>['#87D37C', '#4183D7'],
+            'lineWidth'=>2,
+            'hideHover'=>true,
+//            'grid'=>false,
+            'fillOpacity'=>0.5,
+            'resize'=>true
         ];
         $options = json_encode($options);
         $options = preg_replace('/"js:(.*?)"/', '$1', $options);
@@ -133,10 +139,13 @@ function showChart($id, $views){
     <title>GitStat</title>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i" rel="stylesheet">
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
     <script>
         $(function(){
             $(function () {
@@ -145,6 +154,9 @@ function showChart($id, $views){
         });
     </script>
     <style>
+        body{
+            font-family: 'Roboto', sans-serif;
+        }
         #page{
             margin-top: 20px;
         }
@@ -152,6 +164,26 @@ function showChart($id, $views){
             display: inline-block;
             vertical-align: middle;
             max-width:100%;
+        }
+        .panel-body .head h2 a{
+            color: #333;
+        }
+        .panel-body .head h2 a:hover,
+        .panel-body .head h2 a:visited,
+        .panel-body .head h2 a:active{
+            text-decoration: none;
+        }
+        .panel-body .head h2{
+            margin-top: 0;
+            font-style: italic;
+            font-weight: 300;
+            display: inline-block;
+        }
+        .poser-list{
+            margin-top: 10px;
+        }
+        .panel-default{
+            box-shadow: 2px 2px 2px #ddd;
         }
     </style>
 </head>
@@ -172,17 +204,17 @@ function showChart($id, $views){
                         if($repositories)
                         foreach($repositories as $repo){?>
                             <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <b><?=$repo['name']?></b> - <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?>
-                                    <ul class="list-unstyled list-inline pull-right">
-                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/downloads?format=flat" class="poser"></li>
-                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/monthly?format=flat" class="poser"></li>
-                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/daily?format=flat" class="poser"></li>
-                                    </ul>
-
-                                    <?//=file_get_contents('https://poser.pugx.org/bookin/yii2-wallet-one/downloads')?>
-                                </div>
                                 <div class="panel-body">
+                                    <div class="head">
+                                        <h2><a href="https://github.com/<?=$repo['owner']?>/<?=$repo['name']?>" target="_blank"><?=$repo['name']?></a></h2>
+                                        <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?>
+                                        <ul class="poser-list list-unstyled list-inline pull-right">
+                                            <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/downloads?format=flat" class="poser"></li>
+                                            <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/monthly?format=flat" class="poser"></li>
+                                            <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/daily?format=flat" class="poser"></li>
+                                        </ul>
+                                    </div>
+
                                     <?showChart($repo['name'], $repo['views']);?>
                                 </div>
                             </div>
