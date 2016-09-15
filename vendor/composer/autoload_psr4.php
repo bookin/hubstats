@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'Psr\\Cache\\' => array($vendorDir . '/psr/cache/src'),
     'League\\Flysystem\\' => array($vendorDir . '/league/flysystem/src'),
+    'GitStat\\' => array($baseDir . '/src'),
     'Cache\\Taggable\\' => array($vendorDir . '/cache/taggable-cache'),
     'Cache\\Adapter\\Filesystem\\' => array($vendorDir . '/cache/filesystem-adapter'),
     'Cache\\Adapter\\Common\\' => array($vendorDir . '/cache/adapter-common'),

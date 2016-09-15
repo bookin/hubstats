@@ -1,8 +1,10 @@
 <?php
-require_once 'vendor/autoload.php';
+require('vendor/autoload.php');
+
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
+use GitStat\GitHub;
 
 
 function isGuest(){
@@ -16,9 +18,6 @@ function isGuest(){
     }
 }
 function getInfo(){
-    $url = 'https://api.github.com';
-
-    $curl = new Curl\Curl();
     if (isset($_COOKIE['access_token'])) {
         $access_token = $_COOKIE['access_token'];
 
@@ -29,23 +28,14 @@ function getInfo(){
         if($pool->hasItem($access_token)){
             return $pool->getItem($access_token)->get();
         }else{
-            $curl->get($url."/user?access_token=".$access_token);
-            $owner = json_decode($curl->response)->login;
-
-            $curl->get($url."/users/$owner/repos?type=owner&sort=updatedaccess_token=".$access_token);
-            $repositories = json_decode($curl->response);
-            $curl->setHeader('Accept', 'application/vnd.github.spiderman-preview');
-            //return $repositories;
+            $owner = GitHub::getUserInfo($access_token);
+            $owner = $owner->login;
+            $repositories = GitHub::getOwnerRepositories($owner, $access_token);
             $response = [];
             foreach($repositories as $repo){
-                $curl->get($url."/repos/$owner/$repo->name/traffic/views?access_token=".$access_token);
-                $data = json_decode($curl->response, true);
+                $data = json_decode(json_encode(GitHub::getRepoTraffic($owner, $repo->name, $access_token)), true);
                 $data['name']=$repo->name;
                 $response[] = $data;
-
-//            echo $repo->name.' ('.$response['count'].'/'.$response['uniques'].')';
-//            showChart($repo->name, $response['views']);
-                #echo'<pre>';print_r($curl->response);echo'</pre>';
             }
             usort($response, function($a, $b){
                 return $b['count'] - $a['count'];
@@ -61,29 +51,12 @@ function getInfo(){
         header('Location: '.strtok($_SERVER['REQUEST_URI'], '?'));
     }
 }
-#$authorizations = $github->api('authorizations')->all();
-
-
-function getAuthUrl(){
-    $client_id = '2f7ddd9f5d31224c77ce';
-    $scope = 'repo';
-    $url = 'https://github.com/login/oauth/authorize?redirect_uri=http://'.$_SERVER['SERVER_NAME'].'&client_id='.$client_id.'&scope='.$scope;
-    return $url;
-}
 
 function setAccess($code){
-    $client_id = '2f7ddd9f5d31224c77ce';
-    $client_secret = '47adcabb6df8115df931813703ff67e2b6796925';
-    $curl = new Curl\Curl();
-    $curl->post('https://github.com/login/oauth/access_token', [
-        'client_id'=>$client_id,
-        'client_secret'=>$client_secret,
-        'code'=>$code
-    ]);
-    $response = $curl->response;
-    $data = [];
-    parse_str($response, $data);
-    //var_dump($response, $data);
+    $data = GitHub::getAccessToken($code);
+    if($data['error']){
+        //...
+    }
     if($data['access_token']){
         setcookie('access_token', $data['access_token'], time()+3600);
     }
@@ -140,7 +113,7 @@ function showChart($id, $views){
             <?if(isGuest()){?>
                 <div class="row">
                     <div class="col-sm-4 col-sm-offset-4">
-                        <a href="<?=getAuthUrl()?>" class="btn btn-block btn-info">Авторизоваться</a>
+                        <a href="<?=GitHub::getAuthUrl()?>" class="btn btn-block btn-info">Авторизоваться</a>
                     </div>
                 </div>
             <?}else{?>
