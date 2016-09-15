@@ -86,6 +86,14 @@ class GitHub
         return $data;
     }
 
+    public static function getRepoReferrers($owner, $repo, $access_token){
+        $data = self::SendRequest('/repos/'.$owner.'/'.$repo.'/traffic/popular/referrers', ['access_token'=>$access_token], ['Accept'=>'application/vnd.github.spiderman-preview']);
+        if(isset($data->error)){
+            //...
+        }
+        return $data;
+    }
+
     /**
      * @param $method
      * @param $data

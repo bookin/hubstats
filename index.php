@@ -38,10 +38,12 @@ function getInfo(){
             $repositories = GitHub::getOwnerRepositories($owner, $access_token);
             $response = [];
             foreach($repositories as $repo){
-                $data = json_decode(json_encode(GitHub::getRepoTraffic($owner, $repo->name, $access_token)), true);
-                $data['name']=$repo->name;
-                $data['owner']=$owner;
-                $response[] = $data;
+                $traffic = json_decode(json_encode(GitHub::getRepoTraffic($owner, $repo->name, $access_token)), true);
+                $referrers = json_decode(json_encode(GitHub::getRepoReferrers($owner, $repo->name, $access_token)), true);
+                $traffic['name']=$repo->name;
+                $traffic['owner']=$owner;
+                $traffic['referrers']=$referrers;
+                $response[] = $traffic;
             }
             usort($response, function($a, $b){
                 return $b['count'] - $a['count'];
@@ -208,6 +210,10 @@ function showChart($id, $views){
             position: relative;
             z-index: 1;
         }
+
+        .referrers{
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -262,7 +268,15 @@ function showChart($id, $views){
                                         <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/daily?format=flat" class="poser"></li>
                                     </ul>
                                 </div>
-
+                                <?if($repo['referrers']){?>
+                                    <small class="referrers">
+                                        <ul class="list-unstyled list-inline text-muted">
+                                            <?foreach($repo['referrers'] as $referrer){?>
+                                                <li><?=$referrer['referrer']?> <?=$referrer['count']?>/<?=$referrer['uniques']?></li>
+                                            <?}?>
+                                        </ul>
+                                    </small>
+                                <?}?>
                                 <?showChart($repo['name'], $repo['views']);?>
                             </div>
                         </div>
