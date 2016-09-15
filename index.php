@@ -6,6 +6,10 @@ use League\Flysystem\Filesystem;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
 use GitStat\GitHub;
 
+if($_SERVER['REQUEST_URI'] == '/logout'){
+    setcookie("access_token", "", time()-3600);
+    header('Location: /');
+}
 
 function isGuest(){
     if (isset($_COOKIE['access_token'])) {
@@ -17,6 +21,7 @@ function isGuest(){
         return true;
     }
 }
+
 function getInfo(){
     if (isset($_COOKIE['access_token'])) {
         $access_token = $_COOKIE['access_token'];
@@ -192,13 +197,16 @@ function showChart($id, $views){
             position: fixed;
             min-width: 100%;
             min-height: 100%;
-            z-index: 2000;
             left: 0;
             top: 0;
             opacity: 0.1;
         }
         .site-wrapper{
             overflow: hidden;
+        }
+        .site-wrapper-inner{
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
@@ -232,6 +240,11 @@ function showChart($id, $views){
 
     <?}else{?>
         <div id="page" class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12">
+                    <a href="/logout" class="btn pull-right">Выйти</a>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-sm-12">
                     <?php
