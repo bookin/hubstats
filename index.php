@@ -1,54 +1,62 @@
 <?php
 require_once 'vendor/autoload.php';
 
-function main(){
+function isGuest(){
+    if (isset($_COOKIE['access_token'])) {
+        return false;
+    }else{
+        if(isset($_GET['code'])){
+            setAccess($_GET['code']);
+        }
+        return true;
+    }
+}
+function getInfo(){
     $url = 'https://api.github.com';
-    
+
     $curl = new Curl\Curl();
-    #$owner = 'bookin';
-    #$repo = 'yii2-wallet-one';
     if (isset($_COOKIE['access_token'])) {
         $access_token = $_COOKIE['access_token'];
-        
+
         $curl->get($url."/user?access_token=".$access_token);
         $owner = json_decode($curl->response)->login;
-        
+
         $curl->get($url."/users/$owner/repos?type=owner&sort=updatedaccess_token=".$access_token);
         $repositories = json_decode($curl->response);
         $curl->setHeader('Accept', 'application/vnd.github.spiderman-preview');
+        //return $repositories;
+        $response = [];
         foreach($repositories as $repo){
             $curl->get($url."/repos/$owner/$repo->name/traffic/views?access_token=".$access_token);
-            $response = json_decode($curl->response, true);
-            
-            echo $repo->name.' ('.$response['count'].'/'.$response['uniques'].')';
-            showChart($repo->name, $response['views']);
+            $data = json_decode($curl->response, true);
+            $data['name']=$repo->name;
+            $response[] = $data;
+
+//            echo $repo->name.' ('.$response['count'].'/'.$response['uniques'].')';
+//            showChart($repo->name, $response['views']);
             #echo'<pre>';print_r($curl->response);echo'</pre>';
         }
-        
-        
-       
-        
+        usort($response, function($a, $b){
+            return $b['count'] - $a['count'];
+        });
+        return $response;
     }else{
-        if(isset($_GET['code'])){
-            getAccess($_GET['code']);
-        }else{
-            auth();
-        }
+        header('Location: '.strtok($_SERVER['REQUEST_URI'], '?'));
     }
 }
 #$authorizations = $github->api('authorizations')->all();
 
 
-function auth(){
+function getAuthUrl(){
     $client_id = '2f7ddd9f5d31224c77ce';
     $scope = 'repo';
-    $url = 'https://github.com/login/oauth/authorize?client_id='.$client_id.'&scope='.$scope;
-    echo '<a href="'.$url.'">'.$url.'</a>';
+    $url = 'https://github.com/login/oauth/authorize?redirect_uri=http://'.$_SERVER['SERVER_NAME'].'&client_id='.$client_id.'&scope='.$scope;
+    return $url;
 }
 
-function getAccess($code){
+function setAccess($code){
     $client_id = '2f7ddd9f5d31224c77ce';
-    $client_secret = '01ece974753b7233a319bd88320724de5666e971';
+    $client_secret = '47adcabb6df8115df931813703ff67e2b6796925';
     $curl = new Curl\Curl();
     $curl->post('https://github.com/login/oauth/access_token', [
         'client_id'=>$client_id,
@@ -84,17 +92,59 @@ function showChart($id, $views){
     }
 }
 ?>
+<?ob_start();?>
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>GitStat</title>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip();
+            })
+        });
+    </script>
+    <style>
+        #page{
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <?php main();?>    
+    <div id="page">
+        <div class="container-fluid">
+            <?if(isGuest()){?>
+                <div class="row">
+                    <div class="col-sm-4 col-sm-offset-4">
+                        <a href="<?=getAuthUrl()?>" class="btn btn-block btn-info">Авторизоваться</a>
+                    </div>
+                </div>
+            <?}else{?>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <?php
+                        $repositories = getInfo();
+                        if($repositories)
+                        foreach($repositories as $repo){?>
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><b><?=$repo['name']?></b> - <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?></div>
+                                <div class="panel-body">
+                                    <?showChart($repo['name'], $repo['views']);?>
+                                </div>
+                            </div>
+                        <?}?>
+                    </div>
+                </div>
+            <?}?>
+        </div>
+    </div>
 </body>
 </html>
+<?ob_end_flush();?>
