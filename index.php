@@ -35,6 +35,7 @@ function getInfo(){
             foreach($repositories as $repo){
                 $data = json_decode(json_encode(GitHub::getRepoTraffic($owner, $repo->name, $access_token)), true);
                 $data['name']=$repo->name;
+                $data['owner']=$owner;
                 $response[] = $data;
             }
             usort($response, function($a, $b){
@@ -58,7 +59,7 @@ function setAccess($code){
         //...
     }
     if($data['access_token']){
-        setcookie('access_token', $data['access_token'], time()+3600);
+        setcookie('access_token', $data['access_token'], time()+(3600*24));
     }
     header('Location: '.strtok($_SERVER['REQUEST_URI'], '?'));
 }
@@ -147,6 +148,11 @@ function showChart($id, $views){
         #page{
             margin-top: 20px;
         }
+        .poser{
+            display: inline-block;
+            vertical-align: middle;
+            max-width:100%;
+        }
     </style>
 </head>
 <body>
@@ -166,7 +172,16 @@ function showChart($id, $views){
                         if($repositories)
                         foreach($repositories as $repo){?>
                             <div class="panel panel-default">
-                                <div class="panel-heading"><b><?=$repo['name']?></b> - <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?></div>
+                                <div class="panel-heading">
+                                    <b><?=$repo['name']?></b> - <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?>
+                                    <ul class="list-unstyled list-inline pull-right">
+                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/downloads?format=flat" class="poser"></li>
+                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/monthly?format=flat" class="poser"></li>
+                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/daily?format=flat" class="poser"></li>
+                                    </ul>
+
+                                    <?//=file_get_contents('https://poser.pugx.org/bookin/yii2-wallet-one/downloads')?>
+                                </div>
                                 <div class="panel-body">
                                     <?showChart($repo['name'], $repo['views']);?>
                                 </div>
