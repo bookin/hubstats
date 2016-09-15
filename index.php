@@ -1,5 +1,9 @@
 <?php
 require_once 'vendor/autoload.php';
+use League\Flysystem\Adapter\Local;
+use League\Flysystem\Filesystem;
+use Cache\Adapter\Filesystem\FilesystemCachePool;
+
 
 function isGuest(){
     if (isset($_COOKIE['access_token'])) {
@@ -18,28 +22,41 @@ function getInfo(){
     if (isset($_COOKIE['access_token'])) {
         $access_token = $_COOKIE['access_token'];
 
-        $curl->get($url."/user?access_token=".$access_token);
-        $owner = json_decode($curl->response)->login;
+        $filesystemAdapter = new Local(__DIR__.'/');
+        $filesystem        = new Filesystem($filesystemAdapter);
+        $pool = new FilesystemCachePool($filesystem);
 
-        $curl->get($url."/users/$owner/repos?type=owner&sort=updatedaccess_token=".$access_token);
-        $repositories = json_decode($curl->response);
-        $curl->setHeader('Accept', 'application/vnd.github.spiderman-preview');
-        //return $repositories;
-        $response = [];
-        foreach($repositories as $repo){
-            $curl->get($url."/repos/$owner/$repo->name/traffic/views?access_token=".$access_token);
-            $data = json_decode($curl->response, true);
-            $data['name']=$repo->name;
-            $response[] = $data;
+        if($pool->hasItem($access_token)){
+            return $pool->getItem($access_token)->get();
+        }else{
+            $curl->get($url."/user?access_token=".$access_token);
+            $owner = json_decode($curl->response)->login;
+
+            $curl->get($url."/users/$owner/repos?type=owner&sort=updatedaccess_token=".$access_token);
+            $repositories = json_decode($curl->response);
+            $curl->setHeader('Accept', 'application/vnd.github.spiderman-preview');
+            //return $repositories;
+            $response = [];
+            foreach($repositories as $repo){
+                $curl->get($url."/repos/$owner/$repo->name/traffic/views?access_token=".$access_token);
+                $data = json_decode($curl->response, true);
+                $data['name']=$repo->name;
+                $response[] = $data;
 
 //            echo $repo->name.' ('.$response['count'].'/'.$response['uniques'].')';
 //            showChart($repo->name, $response['views']);
-            #echo'<pre>';print_r($curl->response);echo'</pre>';
+                #echo'<pre>';print_r($curl->response);echo'</pre>';
+            }
+            usort($response, function($a, $b){
+                return $b['count'] - $a['count'];
+            });
+            $item = $pool->getItem($access_token);
+            $item->set($response);
+            $item->expiresAfter(60*60);
+            $pool->save($item);
+            return $response;
         }
-        usort($response, function($a, $b){
-            return $b['count'] - $a['count'];
-        });
-        return $response;
+
     }else{
         header('Location: '.strtok($_SERVER['REQUEST_URI'], '?'));
     }

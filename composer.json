@@ -1,5 +1,6 @@
 {
     "require": {
-        "php-mod/curl": "^1.4"
+        "php-mod/curl": "^1.4",
+        "cache/filesystem-adapter": "^0.3.1"
     }
 }

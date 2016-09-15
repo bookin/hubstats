@@ -6,7 +6,54 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit65bd0960cf56bd4ec123047ecc6a1f63
 {
+    public static $prefixLengthsPsr4 = array (
+        'P' => 
+        array (
+            'Psr\\Cache\\' => 10,
+        ),
+        'L' => 
+        array (
+            'League\\Flysystem\\' => 17,
+        ),
+        'C' => 
+        array (
+            'Cache\\Taggable\\' => 15,
+            'Cache\\Adapter\\Filesystem\\' => 25,
+            'Cache\\Adapter\\Common\\' => 21,
+        ),
+    );
+
+    public static $prefixDirsPsr4 = array (
+        'Psr\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/cache/src',
+        ),
+        'League\\Flysystem\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/flysystem/src',
+        ),
+        'Cache\\Taggable\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/cache/taggable-cache',
+        ),
+        'Cache\\Adapter\\Filesystem\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/cache/filesystem-adapter',
+        ),
+        'Cache\\Adapter\\Common\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/cache/adapter-common',
+        ),
+    );
+
     public static $prefixesPsr0 = array (
+        'P' => 
+        array (
+            'Psr\\Log\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/psr/log',
+            ),
+        ),
         'C' => 
         array (
             'Curl' => 
@@ -19,6 +66,8 @@ class ComposerStaticInit65bd0960cf56bd4ec123047ecc6a1f63
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
+            $loader->prefixLengthsPsr4 = ComposerStaticInit65bd0960cf56bd4ec123047ecc6a1f63::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit65bd0960cf56bd4ec123047ecc6a1f63::$prefixDirsPsr4;
             $loader->prefixesPsr0 = ComposerStaticInit65bd0960cf56bd4ec123047ecc6a1f63::$prefixesPsr0;
 
         }, null, ClassLoader::class);
