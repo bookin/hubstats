@@ -139,6 +139,9 @@ function showChart($id, $views){
     <title>GitStat</title>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <?if(isGuest()){?>
+        <link rel="stylesheet" href="http://getbootstrap.com/examples/cover/cover.css" crossorigin="anonymous">
+    <?}?>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i" rel="stylesheet">
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -185,45 +188,76 @@ function showChart($id, $views){
         .panel-default{
             box-shadow: 2px 2px 2px #ddd;
         }
+        .cover-img{
+            position: fixed;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            opacity: 0.1;
+        }
+        .site-wrapper{
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
-    <div id="page">
-        <div class="container-fluid">
-            <?if(isGuest()){?>
-                <div class="row">
-                    <div class="col-sm-4 col-sm-offset-4">
-                        <a href="<?=GitHub::getAuthUrl()?>" class="btn btn-block btn-info">Авторизоваться</a>
-                    </div>
-                </div>
-            <?}else{?>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <?php
-                        $repositories = getInfo();
-                        if($repositories)
-                        foreach($repositories as $repo){?>
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    <div class="head">
-                                        <h2><a href="https://github.com/<?=$repo['owner']?>/<?=$repo['name']?>" target="_blank"><?=$repo['name']?></a></h2>
-                                        <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?>
-                                        <ul class="poser-list list-unstyled list-inline pull-right">
-                                            <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/downloads?format=flat" class="poser"></li>
-                                            <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/monthly?format=flat" class="poser"></li>
-                                            <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/daily?format=flat" class="poser"></li>
-                                        </ul>
-                                    </div>
+    <?if(isGuest()){?>
 
-                                    <?showChart($repo['name'], $repo['views']);?>
-                                </div>
-                            </div>
-                        <?}?>
+        <div class="site-wrapper">
+            <div class="site-wrapper-inner">
+                <div class="cover-container">
+
+                    <div class="inner cover">
+                        <h1 class="cover-heading">Stats of your repositories</h1>
+                        <p class="lead">You can see stats of all your repositories on GitHub. Also if you have projects in the packagist.org, you can see information about downloads your packages.</p>
+                        <p class="lead">
+                            <a href="<?=GitHub::getAuthUrl()?>" class="btn btn-default btn-lg">
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAABDlBMVEUAAAAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiL+ublTAAAAWXRSTlMAAQIDBAUGBwoMDQ8QERITFRcYGhwdHh8lJicoKiwxMjQ1Nzk7QU9QUVRWV1xeX2Fkb3F4eXt8f4OFj5qdnqOlpqqrra+wsry+w8XHyMrT1d7g4uvt9/n7/fQTEl0AAAD2SURBVBgZhcHZQkFRAIbRfx9HRamkkeZRk4pGhTRPRFK+93+R9iY5rlpLv0Z2irXmx91BXH1iJbqeptWTbhGQVVeOfldGbdtQqdJVf4RTOWPAuBIPN9nMUeF5XmEgKasMDCgAqEqKYY2qx8eak3aBF6OAS+BcKgGLCooDNakORBXkYRl9AREFeVi+6sCUgoawjO6BfQWtAg0pAzR89ZgKkJcmsCoRdYULWMuSXknNtsiv+ZK8lbNvrIaRNEMzMgnvcm5pW5eT49qLpsJy9nCK6ihyOCgjZxPrLaQOcwEcy9kCyiH9WahxIifN54b6JBNyhpeM/vEDAodL3dSRubEAAAAASUVORK5CYII=" alt="">
+                                Sign in
+                            </a>
+                        </p>
                     </div>
+
+                    <div class="mastfoot">
+                        <div class="inner">
+                        </div>
+                    </div>
+
                 </div>
-            <?}?>
+            </div>
+            <img src="/img/stats.JPG" class="cover-img">
         </div>
-    </div>
+
+    <?}else{?>
+        <div id="page" class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12">
+                    <?php
+                    $repositories = getInfo();
+                    if($repositories)
+                    foreach($repositories as $repo){?>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="head">
+                                    <h2><a href="https://github.com/<?=$repo['owner']?>/<?=$repo['name']?>" target="_blank"><?=$repo['name']?></a></h2>
+                                    <span data-toggle="tooltip" data-title="Views/Unique" data-placement="top"></span><?=$repo['count'].'/'.$repo['uniques']?>
+                                    <ul class="poser-list list-unstyled list-inline pull-right">
+                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/downloads?format=flat" class="poser"></li>
+                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/monthly?format=flat" class="poser"></li>
+                                        <li><img src="https://poser.pugx.org/<?=$repo['owner']?>/<?=$repo['name']?>/d/daily?format=flat" class="poser"></li>
+                                    </ul>
+                                </div>
+
+                                <?showChart($repo['name'], $repo['views']);?>
+                            </div>
+                        </div>
+                    <?}?>
+                </div>
+            </div>
+        </div>
+    <?}?>
 </body>
 </html>
 <?ob_end_flush();?>
