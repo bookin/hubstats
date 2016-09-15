@@ -63,22 +63,64 @@ function setAccess($code){
     header('Location: '.strtok($_SERVER['REQUEST_URI'], '?'));
 }
 
-function showChart($id, $views){
-    $data = [];
-    foreach ($views as $view) {
-        $data[] = ['x'=>$view['timestamp'], 'count'=>$view['count'], 'uniques'=>$view['uniques']];
+/**
+ * @param DateTime $date_start
+ * @param DateTime $date_end
+ * @param string $format
+ * @param bool|string|integer|false $value
+ * @param string $interval
+ * @return array
+ */
+function ArrayDateRange(DateTime $date_start, DateTime $date_end, $format='Y-m-d', $value=false, $interval = 'P1D'){
+    $return_array = [];
+    $period = new DatePeriod(
+        $date_start,
+        new DateInterval($interval),
+        $date_end
+    );
+    foreach($period as $date){
+        if($value !== false){
+            $return_array[$date->format($format)] = $value;
+        }else{
+            $return_array[]=$date->format($format);
+        }
     }
+    return $return_array;
+}
+
+function showChart($id, $views){
+    if(!count($views)){
+        return;
+    }
+
+    $start = new DateTime(date('c', $views[0]['timestamp']/1000));
+    $end = new DateTime(date('c',($views[count($views)-1]['timestamp']/1000)+(60*60*24)));
+    $data = ArrayDateRange($start, $end, 'U', ['count'=>0,'uniques'=>0]);
+    foreach($data as $t=>&$d){
+        $key = array_search($t*1000, array_column($views, 'timestamp'));
+        $view = $views[$key];
+        if($key !== false){
+            $d = ['x'=>$view['timestamp'], 'count'=>$view['count'], 'uniques'=>$view['uniques']];
+        }else{
+            $d['x']=$t*1000;
+        }
+    }
+    $data = array_values($data);
     if($data){
         $options = [
             'element'=> $id,
             'data'=>$data,
             'xkey'=>'x',
             'ykeys'=>['count', 'uniques'],
-            'labels'=>['Visits', 'Uniques']
+            'labels'=>['Visits', 'Uniques'],
+            'xLabels'=>'day',
+            'behaveLikeLine'=>true,
+            'dateFormat'=>"js:function(x){ var date = new Date(x); return ('0' + (date.getMonth() + 1)).slice(-2) + '/' +  ('0' + date.getDate()).slice(-2) + '/' + date.getFullYear().toString().replace(new RegExp('^.{2}'), '');}"
         ];
-        
+        $options = json_encode($options);
+        $options = preg_replace('/"js:(.*?)"/', '$1', $options);
         echo '<div id="'.$id.'" style="height: 250px;"></div>';
-        echo '<script>new Morris.Line('.json_encode($options).');</script>';
+        echo '<script>new Morris.Area('.$options.');</script>';
     }
 }
 ?>
